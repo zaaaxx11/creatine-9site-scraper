@@ -16,19 +16,21 @@ flowchart LR
     Engine --> Unmatched[Unmatched list]
 ```
 
-## Sites
+## Sites & methods
 
 | # | Site | Method |
 |---|------|--------|
-| 1 | ActiveSportsNutrition | direct |
-| 2 | DolphinFitness | direct |
-| 3 | HollandAndBarrett | via Jina Reader (direct returns a 202 challenge page) |
-| 4 | AppliedNutrition | Shopify `products.json` |
-| 5 | 10xAthletic | direct |
-| 6 | AnimalPak | direct |
-| 7 | CellucorUk | direct |
-| 8 | IHerbUk | direct (+ Jina fallback) |
-| 9 | ReflexNutrition | Shopify `products.json` |
+| 1 | ActiveSportsNutrition | Search pages `Search?q=Creatine&size=100&skip=0..300`. Split tiles on `product-list-item-title`, name from `productDetailLink`, price from `finalPrice.amountIncVat` JSON |
+| 2 | DolphinFitness | List pages `/en/creatine/list/1..9`. Split on `ari-pc pg-pc` cells, name from link `title`, price = lowest `£` in cell |
+| 3 | HollandAndBarrett | Via Jina Reader (direct returns a 202 challenge page). Parse markdown product links, name + `£` from link label |
+| 4 | AppliedNutrition | Shopify `/products.json` (paginated, 250/page). Title + variant title, variant price + barcode |
+| 5 | 10xAthletic | Shopify `/products.json` (paginated, 250/page). Title + variant title, variant price + barcode |
+| 6 | AnimalPak | Shopify `/products.json` (paginated, 250/page). Title + variant title, variant price + barcode |
+| 7 | CellucorUk | Homepage `/product/*` links, visit each page. Price from JSON-LD (`price` + `priceCurrency: GBP`, or `lowPrice`, or `£`), name from `<title>`, barcode from `gtin13` |
+| 8 | IHerbUk | Search pages `search?kw=creatine&p=1..20`. Split on `data-product-id`, price from `discountPrice` / `data-ga-discount-price`, name from `itemprop="name"` (Jina fallback if blocked) |
+| 9 | ReflexNutrition | Shopify `/products.json` (paginated, 250/page). Title + variant title, variant price + barcode |
+
+Plus `catalog_brands.py`: full per-brand catalogs for Dolphin (`/en/{brand-slug}/list/`) and ASN (`Search?q={Brand}`) so non-creatine lines (gainers, pre-workouts) are covered too.
 
 ## Files (run in order)
 

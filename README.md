@@ -1,51 +1,61 @@
-# 9-Site Creatine Competitor Scraper
+# 9-Site Competitor Price Scraper
 
-Scrapes best competitor prices for 923 creatine products across 9 UK supplement sites.
-Real result: **888/923 matched** (Oct 2026).
+Finds the best competitor price for each product across 9 UK supplement sites.
+Works.
 
 No proxy needed. No API key needed. Direct HTTP + free Jina Reader fallback.
 
+## How it works
+
+```mermaid
+flowchart LR
+    Feed[Product feed CSV] --> Engine
+    Sites[9 sites] --> Catalog[Catalog JSON]
+    Catalog --> Engine[Match engine]
+    Engine --> Best[Best price per product]
+    Engine --> Unmatched[Unmatched list]
+```
+
 ## Sites
 
-| # | Site | URL / Method |
-|---|------|--------------|
-| 1 | ActiveSportsNutrition | `activesportsnutrition.co.uk/Search?q=Creatine` (direct) |
-| 2 | DolphinFitness | `dolphinfitness.co.uk/en/creatine/list/1..N` (direct) |
+| # | Site | Method |
+|---|------|--------|
+| 1 | ActiveSportsNutrition | direct |
+| 2 | DolphinFitness | direct |
 | 3 | HollandAndBarrett | via Jina Reader (direct returns a 202 challenge page) |
-| 4 | AppliedNutrition | `appliednutrition.uk/products.json` (Shopify JSON) |
-| 5 | 10xAthletic | `10xathletic.com/collections/creatine` (direct) |
-| 6 | AnimalPak | `uk.animalpak.com/collections/creatine` (direct) |
-| 7 | CellucorUk | `cellucor.uk` (direct) |
-| 8 | IHerbUk | via Jina Reader fallback |
-| 9 | ReflexNutrition | `reflexnutrition.com/products.json` (Shopify JSON) |
+| 4 | AppliedNutrition | Shopify `products.json` |
+| 5 | 10xAthletic | direct |
+| 6 | AnimalPak | direct |
+| 7 | CellucorUk | direct |
+| 8 | IHerbUk | direct (+ Jina fallback) |
+| 9 | ReflexNutrition | Shopify `products.json` |
 
 ## Files (run in order)
 
 | # | File | Does |
 |---|------|------|
 | 1 | `competitor9.py` | Scrapes all 9 sites → `comp_cache/catalog9.json` |
-| 2 | `catalog_brands.py` | Full brand catalogs (Dolphin + ASN) → `comp_cache/catalog_brands.json`. Optional brand args: `python3.11 catalog_brands.py "Optimum Nutrition"` |
-| 3 | `competitor9_engine.py` | **Main engine** — matches 923 feed rows vs catalogs → `DropshipProductFeedCreatineOnly.9best.923.csv` + debug + unmatched report |
-| 4 | `apply_whitelist.py` | Backfills 3 hand-verified lines (fill-only, never overwrites) |
-| 5 | `diffreport.py` | Human-readable audit of unmatched rows → `unmatched_perbedaan.txt` |
+| 2 | `catalog_brands.py` | Full brand catalogs (Dolphin + ASN) → `comp_cache/catalog_brands.json` |
+| 3 | `competitor9_engine.py` | **Main engine** — matches feed rows vs catalogs → final CSV + debug + unmatched report |
+| 4 | `apply_whitelist.py` | Backfills hand-verified lines (fill-only, never overwrites) |
+| 5 | `diffreport.py` | Human-readable audit of unmatched rows |
 | 6 | `regtest.py` | Regression tests (exit 0 = pass) |
-| 7 | `competitor_catalog.py` | Older engine (archive / comparison) |
-| 8 | `price_engine.py` | Older engine v2 (archive / comparison) |
+| 7 | `competitor_catalog.py` | Older engine (archive) |
+| 8 | `price_engine.py` | Older engine v2 (archive) |
 
 ## Usage
 
 ```bash
 pip install "scrapling[fetchers]"
 
-# Put your feed next to the scripts:
-# DropshipProductFeedCreatineOnly.csv (utf-8-sig, 923 rows)
+# Put your product feed CSV next to the scripts (utf-8-sig)
 
-python3.11 competitor9.py        # scrape 9 sites
-python3.11 catalog_brands.py    # full Dolphin + ASN brand catalogs
-python3.11 competitor9_engine.py # match → final CSV + debug + unmatched
-python3.11 apply_whitelist.py   # optional whitelist backfill
-python3.11 diffreport.py        # audit leftovers
-python3.11 regtest.py           # regression check
+python3.11 competitor9.py         # scrape 9 sites
+python3.11 catalog_brands.py     # full Dolphin + ASN brand catalogs
+python3.11 competitor9_engine.py  # match → final CSV + debug + unmatched
+python3.11 apply_whitelist.py    # optional whitelist backfill
+python3.11 diffreport.py         # audit leftovers
+python3.11 regtest.py            # regression check
 ```
 
 ## Notes
@@ -53,6 +63,5 @@ python3.11 regtest.py           # regression check
 - Read the feed CSV with `encoding="utf-8-sig"` (BOM).
 - Matching: barcode-exact first, then brand + name + size fuzzy (size is a hard block — 187g never matches 500g).
 - Best-price tie-break: most-common competitor (catalog coverage).
-- Engine output = original columns + `competitor` + `competitorPrice` (USD, FX 1.3233, Oct 2026).
-- Fail-closed: uncertain rows stay empty and go to `unmatched_report.csv` — never guessed.
-- Network: plain `scrapling` Fetcher + public `https://r.jina.ai/` reader. No proxy, no key, no login.
+- Engine output = original columns + `competitor` + `competitorPrice` (USD).
+- If a product has no match, it means that product is sold on only 1 site (no competitor carries it) — not a scraper failure. Uncertain rows stay empty and go to the unmatched report, never guessed.

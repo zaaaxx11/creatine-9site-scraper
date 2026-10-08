@@ -1,6 +1,6 @@
-# 9-Site Competitor Price Scraper
+# 9-Site Creatine Competitor Price Scraper
 
-Finds the best competitor price for each product across 9 UK supplement sites.
+Finds the best competitor price for each creatine product across 9 UK supplement sites.
 Works.
 
 No proxy needed. No API key needed. Direct HTTP + free Jina Reader fallback.

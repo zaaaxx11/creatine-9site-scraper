@@ -1,0 +1,6 @@
+comp_cache/
+*.csv
+*.json
+__pycache__/
+*.pyc
+unmatched_perbedaan.txt
